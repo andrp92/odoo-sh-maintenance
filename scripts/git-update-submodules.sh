@@ -31,6 +31,10 @@ cd $APP_PATH
 git config user.name github-actions
 git config user.email github-actions@github.com
 
+# UPDATE PROCESS
+git submodule update
+git submodule foreach "(git checkout $BRANCH && git pull --ff origin $BRANCH) || true"
+
 for i in $(git submodule foreach --quiet 'echo $path')
 do
   echo "Adding $i to root repo"
