@@ -1,0 +1,78 @@
+on:
+  workflow_dispatch:
+    inputs:
+      owner:
+        description: "Project Owner"
+        default: ${GITHUB_REPOSITORY_OWNER}
+        type: choice
+        required: true
+        options:
+          - "indexa-git"
+          - "iterativo-git"
+      project:
+        description: "Project Name"
+        required: true
+        type: string
+      branch:
+        description: "Project Branch"
+        required: true
+        default: "13.0"
+        type: choice
+        options:
+          - "12.0"
+          - "13.0"
+          - "14.0"
+          - "15.0"
+      environment:
+        description: "Environment to run tests against"
+        required: true
+        type: choice
+        default: "staging"
+        options:
+          - "prod"
+          - "staging"
+
+jobs:
+  log-the-inputs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Local
+        uses: actions/checkout@v3
+        with:
+          path: .
+
+      - name: Log the inputs
+        run: |
+          echo "Project Owner: $OWNER"
+          echo "Project Name: $NAME"
+          echo "Branch: $BRANCH"
+          echo "Environment: $ENVIRONMENT"
+          echo "Project full name: $PROJECT_FULL_NAME"
+        env:
+          OWNER: ${{ inputs.owner }}
+          NAME: ${{ inputs.project }}
+          BRANCH: ${{ inputs.branch }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          PROJECT_FULL_NAME: ${{ inputs.owner }}/${{ inputs.project }}
+
+      - name: Construct repository name with owner
+        id: repo_slugs
+        shell: bash
+        run: |
+          REPO_FULL_NAME=${{ inputs.owner }}/${{ inputs.project }}
+          echo ::set-output name=repo_name::$REPO_FULL_NAME
+
+      - name: Clone Project
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ steps.repo_slugs.outputs.repo_name }}
+          token: ${{ secrets.ACTIONS_PAT }}
+          path: project
+          ref: "13.0"
+          submodules: "recursive"
+
+      - name: Update with custom script
+        run: |
+          echo "$(ls -la)"
+          find project -maxdepth 1 -name '.gitmodules' -exec ./git-update-submodules.sh . ${{ inputs.branch }} ${{ inputs.environment }} \;
