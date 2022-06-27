@@ -24,6 +24,14 @@ if [ -z $DEPLOY ]; then
   exit 1;
 fi
 
+FORCE_STAGING=$1
+shift
+
+if [ -z $FORCE_STAGING ]; then
+  echo "Missing 4th argument (hard reset staging true or false)";
+  exit 1;
+fi
+
 echo "Working in: $APP_PATH / $(pwd)"
 cd $APP_PATH
 
@@ -58,11 +66,22 @@ if [ $DEPLOY == "prod" ]; then
   exit 0;
 fi
 
+# Update or create staging branch with latest changes from stable branch
+if [ $FORCE_STAGING == "true" ]; then
+    git checkout $BRANCH-staging || (echo "No staging branch found, creating new branch" && git checkout -b $BRANCH-staging)
+    git reset --hard origin/$BRANCH
+fi
+
 if [ $DEPLOY == "staging" ]; then
   # Merged local changes to staging branch
   git checkout $BRANCH-staging || (echo "No staging branch found, creating new branch" && git checkout -b $BRANCH-staging)
-  git merge --ff $BRANCH-update-submodules || exit 1
-  git push origin $BRANCH-staging
-  echo "Updated $(pwd) to latest head of submodules"
+  if [ $FORCE_STAGING == "true" ]; then
+    git reset --hard origin/$BRANCH
+    git push origin -f $BRANCH-staging
+  else
+    git merge --ff $BRANCH-update-submodules || return 1
+    git push origin $BRANCH-staging
+  fi
+  echo "Updated $BRANCH to latest head of submodules"
   exit 0;
 fi
