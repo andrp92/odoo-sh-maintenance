@@ -74,6 +74,7 @@ jobs:
           path: ./${{ inputs.project }}
           ref: "13.0"
           submodules: "recursive"
+          fetch-depth: 0
 
       - name: Update with custom script
         shell: bash
