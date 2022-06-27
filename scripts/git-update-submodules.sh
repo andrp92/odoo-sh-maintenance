@@ -27,6 +27,10 @@ fi
 echo "Working in: $APP_PATH / $(pwd)"
 cd $APP_PATH
 
+# Set main git config
+git config user.name github-actions
+git config user.email github-actions@github.com
+
 for i in $(git submodule foreach --quiet 'echo $path')
 do
   echo "Adding $i to root repo"
@@ -46,16 +50,13 @@ fi
 
 if [ $DEPLOY == "staging" ]; then
   # Merged local changes to staging branch
-  git checkout $BRANCH-staging
+  git checkout $BRANCH-staging || (echo "No staging branch found, creating new branch" && git checkout -b $BRANCH-staging)
   git merge --ff $BRANCH-update-submodules
   git push origin $BRANCH-staging
   echo "Updated $(pwd) to latest head of submodules"
-
-  # Leave update branch available for merging into production later
-  git checkout $BRANCH-update-submodules
-  git push --set-upstream origin $BRANCH-update-submodules
   exit 0;
 fi
 
-
-
+# Leave update branch available for merging into production later
+git checkout $BRANCH-update-submodules
+git push --set-upstream origin $BRANCH-update-submodules
