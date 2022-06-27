@@ -1,0 +1,38 @@
+on: 
+  workflow_dispatch:
+    inputs:
+      project:
+        description: 'Project Name'
+        required: true
+        type: string
+      branch:
+        description: 'Project Branch'     
+        required: true
+        default: '13.0'
+        type: choice
+        options:
+        - '12.0'
+        - '13.0'
+        - '14.0'
+        - '15.0'
+      environment:
+        description: 'Environment to run tests against'
+        required: true
+        type: choice
+        default: 'staging'
+        options:
+          - 'prod'
+          - 'staging'
+
+jobs:
+  log-the-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Project Name: $NAME"
+          echo "Branch: $BRANCH"
+          echo "Environment: $ENVIRONMENT"
+        env:
+          NAME: ${{ inputs.project }}
+          BRANCH: ${{ inputs.branch }}
+          ENVIRONMENT: ${{ inputs.environment }}
