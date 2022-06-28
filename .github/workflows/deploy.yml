@@ -84,4 +84,4 @@ jobs:
 
       - name: Update with custom script
         run: |
-          ./scripts/git-update-submodules.sh ./${{ inputs.project }} ${{ inputs.branch }} ${{ inputs.environment }} ${{ inputs.force_staging }}
+          find ./${{ inputs.project }} -maxdepth 1 -name '.gitmodules' -execdir $(pwd)/scripts/git-update-submodules.sh . ${{ inputs.branch }} ${{ inputs.environment }} ${{ inputs.force_staging }} \;

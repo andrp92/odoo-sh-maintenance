@@ -63,7 +63,6 @@ if [ $DEPLOY == "prod" ]; then
   git merge --ff $BRANCH-update-submodules
   git push origin $BRANCH
   echo "Updated $(pwd) to latest head of submodules"
-  exit 0;
 fi
 
 # Update or create staging branch with latest changes from stable branch
@@ -79,9 +78,8 @@ if [ $DEPLOY == "staging" ]; then
     git reset --hard origin/$BRANCH
     git push origin -f $BRANCH-staging
   else
-    git merge --ff $BRANCH-update-submodules || exit 1
+    git merge --ff $BRANCH-update-submodules
     git push origin $BRANCH-staging
   fi
   echo "Updated $BRANCH to latest head of submodules"
-  exit 0;
 fi
