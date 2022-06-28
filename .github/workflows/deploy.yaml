@@ -129,11 +129,11 @@ jobs:
           git checkout -b ${{ inputs.branch }}-staging)
 
           if [ ${{ inputs.force_staging }} == "true" ]; then \
-            git reset --hard origin/${{ inputs.branch }} \
-            git push origin -f ${{ inputs.branch }}-staging; \
-           else \
+            git reset --hard origin/${{ inputs.branch }} && \
+            git push -f origin ${{ inputs.branch }}-staging; \
+          else \
             git merge --ff ${{ inputs.branch }}-update-submodules || \
-            (echo "Merge failed, try the force_staging option when running workflow" && exit 1)
+            (echo "Merge failed, try the force_staging option when running workflow" && exit 1) && \
             git push origin ${{ inputs.branch }}-staging; \
           fi
 
