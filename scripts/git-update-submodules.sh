@@ -76,12 +76,12 @@ if [ $DEPLOY == "staging" ]; then
   git checkout $BRANCH-staging || (echo "No staging branch found, creating new branch" && git checkout -b $BRANCH-staging)
   if [ $FORCE_STAGING == "true" ]; then
     git reset --hard origin/$BRANCH
-    git push origin -f $BRANCH-staging
-    exit 1
+    git push origin -f $BRANCH-staging || exit 1
+    echo $?
   else
     git merge --ff $BRANCH-update-submodules
-    git push origin $BRANCH-staging
-    exit 1
+    git push origin $BRANCH-staging || exit 1
+    echo $?
   fi
   echo "Updated $BRANCH to latest head of submodules"
 fi
