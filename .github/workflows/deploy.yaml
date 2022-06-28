@@ -95,6 +95,12 @@ jobs:
           do echo "Adding $i to root repo" && git add "$i"; \
           done
       
+      - name: Set identity
+        working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
+        run: |
+          git config user.name "{{ github.actor }}"
+          git config user.email "{{ secrets.GIT_USER_EMAIL }}"
+
       - name: Commit changes
         working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
         run: |
@@ -117,8 +123,9 @@ jobs:
         working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
         if: inputs.environment == 'staging'
         run: |
-          git checkout ${{ inputs.branch }}-staging || (echo "No staging branch found, creating new branch" \ 
-          && git checkout -b ${{ inputs.branch }}-staging)
+          git checkout ${{ inputs.branch }}-staging || \
+          (echo "No staging branch found, creating new branch" && \ 
+          git checkout -b ${{ inputs.branch }}-staging)
 
           if [ ${{ inputs.force_staging }} == "true" ]; then \
             git reset --hard origin/${{ inputs.branch }} \
