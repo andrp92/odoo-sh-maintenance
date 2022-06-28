@@ -79,7 +79,7 @@ if [ $DEPLOY == "staging" ]; then
     git reset --hard origin/$BRANCH
     git push origin -f $BRANCH-staging
   else
-    git merge --ff $BRANCH-update-submodules || return 1
+    git merge --ff $BRANCH-update-submodules || exit 1
     git push origin $BRANCH-staging
   fi
   echo "Updated $BRANCH to latest head of submodules"
