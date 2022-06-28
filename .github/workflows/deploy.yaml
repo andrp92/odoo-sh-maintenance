@@ -95,12 +95,12 @@ jobs:
           for i in $(git submodule foreach --quiet 'echo $path'); \
           do echo "Adding $i to root repo" && git add "$i"; \
           done
-      
+
       - name: Set identity
         working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
         run: |
-          git config user.name "{{ github.actor }}"
-          git config user.email "{{ secrets.GIT_USER_EMAIL }}"
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ secrets.GIT_USER_EMAIL }}"
 
       - name: Commit changes in a temporary branch
         working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
@@ -110,7 +110,7 @@ jobs:
           git commit -m "[REF] *: updated ${{ inputs.branch }} to latest head of submodules"
           git push -d origin ${{ inputs.branch }}-update-submodules
           git push --set-upstream origin ${{ inputs.branch }}-update-submodules
-      
+
       - name: Deploy to production
         working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
         if: inputs.environment == 'production'
@@ -136,4 +136,3 @@ jobs:
             (echo "Merge failed, try the force_staging option when running workflow" && exit 1) && \
             git push origin ${{ inputs.branch }}-staging; \
           fi
-
