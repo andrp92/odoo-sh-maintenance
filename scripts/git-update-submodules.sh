@@ -40,7 +40,7 @@ git config user.name github-actions
 git config user.email github-actions@github.com
 
 # UPDATE PROCESS
-git submodule foreach "(git reset --hard origin/$BRANCH)" # reset to latest head of submodule
+git submodule foreach "(git reset --hard origin/$BRANCH)" # reset to origin state
 git submodule sync
 git submodule init
 git submodule update
@@ -63,12 +63,6 @@ if [ $DEPLOY == "prod" ]; then
   git merge --ff $BRANCH-update-submodules
   git push origin $BRANCH
   echo "Updated $(pwd) to latest head of submodules"
-fi
-
-# Update or create staging branch with latest changes from stable branch
-if [ $FORCE_STAGING == "true" ]; then
-    git checkout $BRANCH-staging || (echo "No staging branch found, creating new branch" && git checkout -b $BRANCH-staging)
-    git reset --hard origin/$BRANCH
 fi
 
 if [ $DEPLOY == "staging" ]; then

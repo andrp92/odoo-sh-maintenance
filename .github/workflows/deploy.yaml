@@ -5,12 +5,9 @@ on:
     inputs:
       owner:
         description: "Project Owner"
-        default: ${GITHUB_REPOSITORY_OWNER}
-        type: choice
+        default: indexa-git
+        type: string
         required: true
-        options:
-          - "indexa-git"
-          - "iterativo-git"
       project:
         description: "Project Name"
         required: true
@@ -25,13 +22,14 @@ on:
           - "13.0"
           - "14.0"
           - "15.0"
+          - "16.0"
       environment:
         description: "Environment to deploy"
         required: true
         type: choice
         default: "staging"
         options:
-          - "prod"
+          - "production"
           - "staging"
       force_staging:
         description: "Force deploy on staging branch"
@@ -77,12 +75,51 @@ jobs:
         with:
           repository: ${{ steps.repo_slugs.outputs.repo_name }}
           token: ${{ secrets.ACTIONS_PAT }}
-          path: ./${{ inputs.project }}
+          path: ./${{ inputs.owner }}/${{ inputs.project }}
           ref: "13.0"
           submodules: "recursive"
           fetch-depth: 0
 
-      - name: Update with custom script
+      - name: Update Submodules
         run: |
-          ls -la
-          (find ./${{ inputs.project }} -maxdepth 1 -name '.gitmodules' -execdir $(pwd)/scripts/git-update-submodules.sh . ${{ inputs.branch }} ${{ inputs.environment }} ${{ inputs.force_staging }} \;) || exit 1
+          cd ./${{ inputs.owner }}/${{ inputs.project }}
+          git submodule sync
+          git submodule update
+          git submodule foreach "(git reset --hard origin/${{ inputs.branch }})"
+          git submodule foreach "(git checkout ${{ inputs.branch }} && git pull --ff origin ${{ inputs.branch }}) || true"
+          
+          for i in $(git submodule foreach --quiet 'echo $path') \
+          do \
+          echo "Adding $i to root repo" \
+          git add "$i" \
+          done
+          
+          git checkout -b ${{ inputs.branch }}-update-submodules
+          git commit -m "[REF] *: updated ${{ inputs.branch }} to latest head of submodules"
+          git push -d origin ${{ inputs.branch }}-update-submodules
+          git push --set-upstream origin ${{ inputs.branch }}-update-submodules
+          git checkout ${{ inputs.branch }}
+      
+      - name: Deploy to production
+        if: inputs.environment == 'production'
+        run: |
+          git checkout ${{ inputs.branch }}
+          git merge --ff ${{ inputs.branch }}-update-submodules
+          git push origin ${{ inputs.branch }}
+          echo "Updated ${{ inputs.project }}/${{ inputs.branch }} to latest head of submodules"
+
+      - name: Deploy to staging
+        if: inputs.environment == 'staging'
+        run: |
+          git checkout ${{ inputs.branch }}-staging || (echo "No staging branch found, creating new branch" \ 
+          && git checkout -b ${{ inputs.branch }}-staging)
+
+          if [ ${{ inputs.force_staging }} == "true" ]; then \
+            git reset --hard origin/${{ inputs.branch }} \
+            git push origin -f ${{ inputs.branch }}-staging || exit 1 \
+           else \
+            git merge --ff ${{ inputs.branch }}-update-submodules \
+            git push origin ${{ inputs.branch }}-staging || exit 1 \
+          fi \
+          echo "Updated ${{ inputs.branch }} to latest head of submodules" \
+          fi

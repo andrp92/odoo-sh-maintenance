@@ -5,7 +5,7 @@ on:
     inputs:
       owner:
         description: "Project Owner"
-        default: ${GITHUB_REPOSITORY_OWNER}
+        default: "indexa-git"
         type: choice
         required: true
         options:
