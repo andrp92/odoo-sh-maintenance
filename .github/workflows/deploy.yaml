@@ -86,7 +86,8 @@ jobs:
           git submodule sync
           git submodule update
           git submodule foreach "(git reset --hard origin/${{ inputs.branch }})"
-          git submodule foreach "(git checkout ${{ inputs.branch }} && git pull --ff origin ${{ inputs.branch }}) || true"
+          git submodule foreach "(git checkout ${{ inputs.branch }} && \
+          git pull --ff origin ${{ inputs.branch }}) || true"
 
       - name: Add updated submodule to root repository
         working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
@@ -131,7 +132,8 @@ jobs:
             git reset --hard origin/${{ inputs.branch }} \
             git push origin -f ${{ inputs.branch }}-staging; \
            else \
-            git merge --ff ${{ inputs.branch }}-update-submodules \
+            git merge --ff ${{ inputs.branch }}-update-submodules || \
+            (echo "Merge failed, try the force_staging option when running workflow" && exit 1)
             git push origin ${{ inputs.branch }}-staging; \
           fi
-          echo "Updated ${{ inputs.branch }} to latest head of submodules"
+
