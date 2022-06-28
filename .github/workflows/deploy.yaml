@@ -80,20 +80,24 @@ jobs:
           submodules: "recursive"
           fetch-depth: 0
 
-      - name: Update Submodules
+      - name: Sync and Fetch Changes
+        working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
         run: |
-          cd ./${{ inputs.owner }}/${{ inputs.project }}
           git submodule sync
           git submodule update
           git submodule foreach "(git reset --hard origin/${{ inputs.branch }})"
           git submodule foreach "(git checkout ${{ inputs.branch }} && git pull --ff origin ${{ inputs.branch }}) || true"
-          
-          for i in $(git submodule foreach --quiet 'echo $path') \
-          do \
-          echo "Adding $i to root repo" \
-          git add "$i" \
+
+      - name: Add updated submodule to root repository
+        working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
+        run: |
+          for i in $(git submodule foreach --quiet 'echo $path'); \
+          do echo "Adding $i to root repo" && git add "$i"; \
           done
-          
+      
+      - name: Commit changes
+        working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
+        run: |
           git checkout -b ${{ inputs.branch }}-update-submodules
           git commit -m "[REF] *: updated ${{ inputs.branch }} to latest head of submodules"
           git push -d origin ${{ inputs.branch }}-update-submodules
@@ -101,6 +105,7 @@ jobs:
           git checkout ${{ inputs.branch }}
       
       - name: Deploy to production
+        working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
         if: inputs.environment == 'production'
         run: |
           git checkout ${{ inputs.branch }}
@@ -109,6 +114,7 @@ jobs:
           echo "Updated ${{ inputs.project }}/${{ inputs.branch }} to latest head of submodules"
 
       - name: Deploy to staging
+        working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
         if: inputs.environment == 'staging'
         run: |
           git checkout ${{ inputs.branch }}-staging || (echo "No staging branch found, creating new branch" \ 
