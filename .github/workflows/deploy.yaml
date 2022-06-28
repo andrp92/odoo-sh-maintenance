@@ -101,14 +101,14 @@ jobs:
           git config user.name "{{ github.actor }}"
           git config user.email "{{ secrets.GIT_USER_EMAIL }}"
 
-      - name: Commit changes
+      - name: Commit changes in a temporary branch
         working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
+        continue-on-error: true
         run: |
           git checkout -b ${{ inputs.branch }}-update-submodules
           git commit -m "[REF] *: updated ${{ inputs.branch }} to latest head of submodules"
           git push -d origin ${{ inputs.branch }}-update-submodules
           git push --set-upstream origin ${{ inputs.branch }}-update-submodules
-          git checkout ${{ inputs.branch }}
       
       - name: Deploy to production
         working-directory: ./${{ inputs.owner }}/${{ inputs.project }}
