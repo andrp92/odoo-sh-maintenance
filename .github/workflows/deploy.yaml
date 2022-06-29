@@ -125,7 +125,7 @@ jobs:
         if: inputs.environment == 'staging'
         run: |
           git checkout ${{ inputs.branch }}-staging || \
-          (echo "No staging branch found, creating new branch" && \ 
+          (echo "No staging branch found, creating new branch" &&
           git checkout -b ${{ inputs.branch }}-staging)
 
           if [ ${{ inputs.force_staging }} == "true" ]; then \
